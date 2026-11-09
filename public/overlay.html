@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Lower Third Overlay</title>
+<style>
+  html, body { margin: 0; background: transparent; overflow: hidden; width: 100%; height: 100%; }
+  /* Fixed 1920x1080 design canvas, scaled to whatever size the browser source is. */
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #lt { position: absolute; inset: 0; opacity: 0; will-change: transform, opacity; }
+  #lt.slide { transform: translateX(-120px); transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .4s; }
+  #lt.fade  { transition: opacity .5s; }
+  #lt.none  { transition: none; }
+  #lt.on { opacity: 1; transform: none; }
+  #bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+  .txt { position: absolute; white-space: nowrap; line-height: 1; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="lt" class="slide">
+    <img id="bg" alt="">
+    <div id="name" class="txt"></div>
+    <div id="title" class="txt"></div>
+  </div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const lt = $('lt');
+
+function fit() { $('stage').style.transform = `scale(${innerWidth / 1920}, ${innerHeight / 1080})`; }
+addEventListener('resize', fit); fit();
+
+function applySettings(s) {
+  const L = s.layout;
+  $('bg').style.display = L.bg ? '' : 'none';
+  if (L.bg) $('bg').src = L.bg;
+  for (const k of ['name', 'title']) {
+    const el = $(k);
+    Object.assign(el.style, {
+      left: L[k + 'X'] + 'px', top: L[k + 'Y'] + 'px', fontSize: L[k + 'Size'] + 'px',
+      color: L[k + 'Color'], fontWeight: L[k + 'Weight'], fontFamily: L.font,
+    });
+  }
+  lt.className = (s.animation || 'slide') + (lt.classList.contains('on') ? ' on' : '');
+}
+
+function setLive(l) {
+  if (l) { $('name').textContent = l.name; $('title').textContent = l.title; }
+  lt.classList.toggle('on', !!l);
+  // on clear we keep the last text in place so it doesn't vanish mid fade-out
+}
+
+const es = new EventSource('/events'); // auto-reconnects if the server restarts
+es.addEventListener('state', (e) => { const d = JSON.parse(e.data); applySettings(d.settings); setLive(d.live); });
+es.addEventListener('settings', (e) => applySettings(JSON.parse(e.data)));
+es.addEventListener('live', (e) => setLive(JSON.parse(e.data)));
+</script>
+</body>
+</html>

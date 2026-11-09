@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supert Lower Thirds</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1d2026; --panel2: #262a32; --line: #333843; --text: #e9ecf1; --mute: #8b93a1;
+    --live: #e5322d; --go: #22b45a; --accent: #4c8dff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  h1 { font-size: 16px; margin: 0; letter-spacing: .5px; }
+  #onair { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .tally { padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; letter-spacing: 1px; background: var(--panel2); color: var(--mute); }
+  .tally.live { background: var(--live); color: #fff; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 50% { opacity: .75; } }
+  #onairText { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--mute); }
+  #onairText b { color: var(--text); }
+  .btn { border: 1px solid var(--line); background: var(--panel2); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+  .btn:hover { border-color: #4a5160; }
+  .btn.clear { background: var(--live); border-color: var(--live); color: #fff; font-weight: 700; padding: 10px 26px; }
+  .btn.take { background: var(--go); border-color: var(--go); color: #fff; font-weight: 700; }
+  .btn.sm { padding: 5px 9px; font-size: 13px; }
+  .btn.ghost { background: transparent; }
+  .outs { display: flex; gap: 8px; }
+  .chip { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer; user-select: none; font-size: 13px; }
+  .chip i { width: 9px; height: 9px; border-radius: 50%; background: #555; }
+  .chip.on i { background: var(--go); }
+  .chip.err i { background: var(--live); }
+  main { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .add { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; margin-bottom: 14px; }
+  input[type=text], input[type=number], input[type=password], select { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; width: 100%; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  #list { display: grid; gap: 8px; }
+  .card { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .card.live { border-color: var(--live); box-shadow: 0 0 0 1px var(--live) inset; }
+  .card.drag { opacity: .4; }
+  .grip { cursor: grab; color: var(--mute); text-align: center; user-select: none; }
+  .who b { display: block; font-size: 17px; }
+  .who span { color: var(--mute); }
+  .who input { margin: 2px 0; }
+  .acts { display: flex; gap: 6px; }
+  .empty { text-align: center; color: var(--mute); padding: 40px 0; border: 1px dashed var(--line); border-radius: 10px; }
+  .hint { color: var(--mute); font-size: 13px; margin: 14px 0; }
+  kbd { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-size: 12px; }
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 14px; width: min(760px, 94vw); padding: 0; }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  .dh { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  .dh h2 { margin: 0; font-size: 17px; }
+  .db { padding: 16px 20px 20px; max-height: 74vh; overflow: auto; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; margin: 0 0 14px; padding: 12px 14px; }
+  legend { padding: 0 6px; color: var(--mute); font-size: 12px; text-transform: uppercase; letter-spacing: .8px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 12px; }
+  .grid.g3 { grid-template-columns: repeat(3, 1fr); }
+  label { display: block; font-size: 12px; color: var(--mute); }
+  label input, label select { margin-top: 3px; color: var(--text); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .msg { font-size: 13px; color: var(--mute); }
+  .msg.ok { color: var(--go); } .msg.bad { color: #ff7b76; }
+  textarea { width: 100%; min-height: 160px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 14px ui-monospace, Menlo, monospace; }
+  #preview { position: relative; width: 100%; aspect-ratio: 16/9; background: repeating-conic-gradient(#2b2f37 0 25%, #23272e 0 50%) 0 0/24px 24px; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+  #preview .st { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #preview img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #preview .t { position: absolute; white-space: nowrap; line-height: 1; }
+  code { background: var(--panel2); padding: 1px 6px; border-radius: 4px; }
+  #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #3a1f1f; border: 1px solid var(--live); padding: 10px 16px; border-radius: 8px; display: none; z-index: 20; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LOWER THIRDS</h1>
+  <div id="onair"><span class="tally" id="tally">OFF AIR</span><span id="onairText"></span></div>
+  <div class="outs">
+    <div class="chip" data-out="browser" title="Browser overlay page (OBS Browser Source / vMix Web Browser input)"><i></i>Overlay</div>
+    <div class="chip" data-out="vmix" title="Drive a vMix title input via its Web API"><i></i>vMix</div>
+    <div class="chip" data-out="obs" title="Drive OBS text sources via obs-websocket"><i></i>OBS</div>
+  </div>
+  <button class="btn clear" id="clearBtn" title="Space / Esc">CLEAR</button>
+  <button class="btn" id="settingsBtn">Settings</button>
+</header>
+
+<main>
+  <form class="add" id="addForm">
+    <input type="text" id="addName" placeholder="Name" autocomplete="off" required>
+    <input type="text" id="addTitle" placeholder="Title (e.g. CEO, Acme Corp)" autocomplete="off">
+    <button class="btn take" style="background:var(--accent);border-color:var(--accent)">Add</button>
+    <button class="btn" type="button" id="importBtn">Import…</button>
+  </form>
+  <div id="list"></div>
+  <p class="hint">Click <b>Take</b> to put a name on air. Taking another person swaps the text. <kbd>Space</kbd> or <kbd>Esc</kbd> clears. Drag <b>⋮⋮</b> to reorder. Double-click a name to edit.</p>
+</main>
+
+<dialog id="importDlg">
+  <div class="dh"><h2>Import people</h2><button class="btn sm ghost" data-close>✕</button></div>
+  <div class="db">
+    <p class="msg">One person per line: <code>Name, Title</code> or tab-separated (paste straight from Excel / Numbers).</p>
+    <textarea id="importText" placeholder="Jane Smith, Chief Executive Officer&#10;Raj Patel, VP of Engineering"></textarea>
+    <div class="row"><button class="btn take" id="importGo">Add to list</button><span class="msg" id="importMsg"></span></div>
+  </div>
+</dialog>
+
+<dialog id="setDlg">
+  <div class="dh"><h2>Settings</h2><button class="btn sm ghost" data-close>✕</button></div>
+  <div class="db">
+    <fieldset><legend>General</legend>
+      <div class="grid">
+        <label>Auto-hide after (seconds, 0 = stay up)<input type="number" min="0" data-k="autoHideSec"></label>
+        <label>Overlay animation<select data-k="animation"><option value="slide">Slide + fade</option><option value="fade">Fade</option><option value="none">Cut</option></select></label>
+      </div>
+    </fieldset>
+
+    <fieldset><legend>vMix</legend>
+      <div class="grid g3">
+        <label>Host / IP<input type="text" data-k="vmix.host"></label>
+        <label>Web Controller port<input type="number" data-k="vmix.port"></label>
+        <label>Overlay channel<select data-k="vmix.overlay"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+        <label>Title input (name or number)<input type="text" data-k="vmix.input"></label>
+        <label>Name text layer<input type="text" data-k="vmix.nameField"></label>
+        <label>Title text layer<input type="text" data-k="vmix.titleField"></label>
+      </div>
+      <div class="row"><button class="btn sm" data-test="vmix">Test connection</button><span class="msg" id="msg-vmix"></span></div>
+    </fieldset>
+
+    <fieldset><legend>OBS (v28+ built-in WebSocket)</legend>
+      <div class="grid g3">
+        <label>Host / IP<input type="text" data-k="obs.host"></label>
+        <label>Port<input type="number" data-k="obs.port"></label>
+        <label>Password<input type="password" data-k="obs.password" placeholder="(none)"></label>
+        <label>Scene (blank = current)<input type="text" data-k="obs.scene"></label>
+        <label>Show/hide source or group<input type="text" data-k="obs.item"></label>
+        <span></span>
+        <label>Name text source<input type="text" data-k="obs.nameSource"></label>
+        <label>Title text source<input type="text" data-k="obs.titleSource"></label>
+      </div>
+      <div class="row"><button class="btn sm" data-test="obs">Test connection</button><span class="msg" id="msg-obs"></span></div>
+    </fieldset>
+
+    <fieldset><legend>Overlay graphic (browser source)</legend>
+      <div class="row" style="margin-top:0">
+        <input type="file" id="bgFile" accept="image/*" style="flex:1">
+        <button class="btn sm" id="bgClear">Remove</button>
+      </div>
+      <p class="msg">Upload the customer's full-frame 1920×1080 transparent PNG, then position the text over it. Coordinates are the top-left of each text line.</p>
+      <div class="grid g3">
+        <label>Name X<input type="number" data-k="layout.nameX"></label>
+        <label>Name Y<input type="number" data-k="layout.nameY"></label>
+        <label>Name size (px)<input type="number" data-k="layout.nameSize"></label>
+        <label>Name colour<input type="color" data-k="layout.nameColor"></label>
+        <label>Name weight<select data-k="layout.nameWeight"><option>400</option><option>600</option><option>700</option><option>800</option></select></label>
+        <span></span>
+        <label>Title X<input type="number" data-k="layout.titleX"></label>
+        <label>Title Y<input type="number" data-k="layout.titleY"></label>
+        <label>Title size (px)<input type="number" data-k="layout.titleSize"></label>
+        <label>Title colour<input type="color" data-k="layout.titleColor"></label>
+        <label>Title weight<select data-k="layout.titleWeight"><option>400</option><option>600</option><option>700</option><option>800</option></select></label>
+        <label>Font family<input type="text" data-k="layout.font"></label>
+      </div>
+      <div id="preview"><div class="st"><img id="pvBg" alt=""><div class="t" id="pvName">Jane Smith</div><div class="t" id="pvTitle">Chief Executive Officer</div></div></div>
+      <p class="msg">Add <code id="overlayUrl"></code> as an OBS Browser Source (1920×1080) or a vMix Web Browser input.</p>
+    </fieldset>
+  </div>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+let S = { people: [], live: null, settings: null, status: {} };
+let editing = null;
+
+async function api(path, method = 'GET', body) {
+  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 5000); }
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---- live sync (server pushes; every open control panel stays consistent)
+const es = new EventSource('/events');
+es.addEventListener('state', (e) => { const d = JSON.parse(e.data); S.people = d.people; S.live = d.live; S.settings = d.settings; render(); fillSettings(); });
+es.addEventListener('people', (e) => { S.people = JSON.parse(e.data); render(); });
+es.addEventListener('live', (e) => { S.live = JSON.parse(e.data); render(); });
+es.addEventListener('settings', (e) => { S.settings = JSON.parse(e.data); render(); if (!$('#setDlg').open) fillSettings(); });
+es.addEventListener('status', (e) => { S.status = JSON.parse(e.data); render(); const bad = Object.entries(S.status).filter(([, v]) => v); if (bad.length) toast(bad.map(([k, v]) => `${k.toUpperCase()}: ${v}`).join('  |  ')); });
+
+function render() {
+  if (!S.settings) return;
+  // header
+  $('#tally').className = 'tally' + (S.live ? ' live' : '');
+  $('#tally').textContent = S.live ? 'ON AIR' : 'OFF AIR';
+  $('#onairText').innerHTML = S.live ? `<b>${esc(S.live.name)}</b> — ${esc(S.live.title)}` : '';
+  for (const c of $$('.chip')) {
+    const k = c.dataset.out;
+    c.classList.toggle('on', !!S.settings.outputs[k]);
+    c.classList.toggle('err', !!S.settings.outputs[k] && !!S.status[k]);
+    c.title = (S.status[k] ? `Last error: ${S.status[k]}\n` : '') + c.title.split('\n').pop();
+  }
+  // list
+  const list = $('#list');
+  if (editing && document.activeElement && list.contains(document.activeElement)) return; // don't clobber an in-progress edit
+  if (!S.people.length) { list.innerHTML = '<div class="empty">No one yet — add a name and title above.</div>'; return; }
+  list.innerHTML = S.people.map((p) => {
+    const isLive = S.live && S.live.id === p.id;
+    return `<div class="card${isLive ? ' live' : ''}" draggable="true" data-id="${p.id}">
+      <div class="grip">⋮⋮</div>
+      <div class="who">${editing === p.id
+        ? `<input type="text" data-f="name" value="${esc(p.name)}"><input type="text" data-f="title" value="${esc(p.title)}">`
+        : `<b data-edit>${esc(p.name)}</b><span data-edit>${esc(p.title) || '&nbsp;'}</span>`}</div>
+      <div class="acts">${editing === p.id
+        ? `<button class="btn sm take" data-act="save">Save</button><button class="btn sm" data-act="cancel">Cancel</button>`
+        : `<button class="btn sm" data-act="edit">Edit</button><button class="btn sm" data-act="del">✕</button>
+           <button class="btn take" data-act="take">${isLive ? 'ON AIR' : 'Take'}</button>`}</div>
+    </div>`;
+  }).join('');
+  if (editing) $('input[data-f=name]', list)?.focus();
+}
+
+// ---- list interactions
+$('#list').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-act]'); const card = e.target.closest('.card'); if (!card) return;
+  const id = card.dataset.id;
+  try {
+    switch (b?.dataset.act) {
+      case 'take': await api('/api/take', 'POST', { id }); break;
+      case 'edit': editing = id; render(); break;
+      case 'cancel': editing = null; render(); break;
+      case 'save': await api(`/api/people/${id}`, 'PUT', { name: $('[data-f=name]', card).value, title: $('[data-f=title]', card).value }); editing = null; render(); break;
+      case 'del': if (confirm('Remove this person?')) await api(`/api/people/${id}`, 'DELETE'); break;
+    }
+  } catch (err) { toast(err.message); }
+});
+$('#list').addEventListener('dblclick', (e) => { const c = e.target.closest('.card'); if (c && e.target.closest('[data-edit]')) { editing = c.dataset.id; render(); } });
+$('#list').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && editing) $('[data-act=save]', e.target.closest('.card')).click();
+  if (e.key === 'Escape' && editing) { editing = null; render(); e.stopPropagation(); }
+});
+
+// drag to reorder
+let dragId = null;
+$('#list').addEventListener('dragstart', (e) => { const c = e.target.closest('.card'); if (!c) return; dragId = c.dataset.id; c.classList.add('drag'); });
+$('#list').addEventListener('dragend', () => { dragId = null; $$('.card.drag').forEach((c) => c.classList.remove('drag')); });
+$('#list').addEventListener('dragover', (e) => {
+  e.preventDefault(); const over = e.target.closest('.card'); const cur = $('.card.drag'); if (!over || !cur || over === cur) return;
+  const r = over.getBoundingClientRect(); over.parentNode.insertBefore(cur, e.clientY < r.top + r.height / 2 ? over : over.nextSibling);
+});
+$('#list').addEventListener('drop', async (e) => { e.preventDefault(); await api('/api/people-order', 'POST', { ids: $$('.card').map((c) => c.dataset.id) }); });
+
+// ---- add / import
+$('#addForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try { await api('/api/people', 'POST', { name: $('#addName').value, title: $('#addTitle').value }); } catch (err) { return toast(err.message); }
+  $('#addName').value = ''; $('#addTitle').value = ''; $('#addName').focus();
+});
+$('#importBtn').onclick = () => { $('#importMsg').textContent = ''; $('#importDlg').showModal(); $('#importText').focus(); };
+$('#importGo').onclick = async () => {
+  const rows = $('#importText').value.split(/\r?\n/).map((l) => l.split(/\t|,(.*)/s).filter((x) => x !== undefined)).map(([name, title]) => ({ name, title: title || '' })).filter((r) => r.name?.trim());
+  if (!rows.length) return;
+  await api('/api/people', 'POST', { people: rows });
+  $('#importText').value = ''; $('#importMsg').textContent = `Added ${rows.length}`; $('#importMsg').className = 'msg ok';
+};
+
+// ---- header controls
+$('#clearBtn').onclick = () => api('/api/clear', 'POST').catch((e) => toast(e.message));
+for (const c of $$('.chip')) c.onclick = () => api('/api/settings', 'POST', { outputs: { [c.dataset.out]: !S.settings.outputs[c.dataset.out] } });
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea, select') || $('dialog[open]')) return;
+  if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); $('#clearBtn').click(); }
+});
+$$('dialog [data-close]').forEach((b) => b.onclick = () => b.closest('dialog').close());
+
+// ---- settings
+const get = (o, k) => k.split('.').reduce((a, p) => a?.[p], o);
+function fillSettings() {
+  if (!S.settings) return;
+  for (const el of $$('[data-k]')) el.value = get(S.settings, el.dataset.k) ?? '';
+  $('#overlayUrl').textContent = `${location.origin}/overlay`;
+  preview();
+}
+function preview() {
+  const L = S.settings.layout;
+  const box = $('#preview'); $('.st', box).style.transform = `scale(${box.clientWidth / 1920 || 0.4})`;
+  $('#pvBg').style.display = L.bg ? '' : 'none'; if (L.bg) $('#pvBg').src = L.bg;
+  for (const k of ['Name', 'Title']) {
+    const l = k.toLowerCase();
+    Object.assign($('#pv' + k).style, { left: L[l + 'X'] + 'px', top: L[l + 'Y'] + 'px', fontSize: L[l + 'Size'] + 'px', color: L[l + 'Color'], fontWeight: L[l + 'Weight'], fontFamily: L.font });
+  }
+}
+$('#settingsBtn').onclick = () => { fillSettings(); $('#setDlg').showModal(); preview(); };
+let saveT;
+$('#setDlg').addEventListener('input', (e) => {
+  const el = e.target.closest('[data-k]'); if (!el) return;
+  const num = el.type === 'number' || ['vmix.overlay', 'layout.nameWeight', 'layout.titleWeight'].includes(el.dataset.k);
+  const patch = {}; let o = patch; const ks = el.dataset.k.split('.');
+  ks.slice(0, -1).forEach((k) => o = o[k] = {});
+  o[ks.at(-1)] = num && el.value !== '' ? Number(el.value) : el.value;
+  // optimistic local update so the preview is instant; debounce the save
+  let t = S.settings; ks.slice(0, -1).forEach((k) => t = t[k]); t[ks.at(-1)] = o[ks.at(-1)]; preview();
+  clearTimeout(saveT); saveT = setTimeout(() => api('/api/settings', 'POST', patch).catch((err) => toast(err.message)), 300);
+});
+$$('[data-test]').forEach((b) => b.onclick = async () => {
+  const k = b.dataset.test, m = $('#msg-' + k); m.className = 'msg'; m.textContent = 'Testing…';
+  await new Promise((r) => setTimeout(r, 400)); // let the debounced settings save land first
+  const r = await api(`/api/test/${k}`, 'POST');
+  m.className = 'msg ' + (r.ok ? 'ok' : 'bad');
+  m.textContent = r.ok ? `Connected ✓  ${(r.inputs || r.scenes || []).slice(0, 6).join(', ')}` : r.error;
+});
+$('#bgFile').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = await fetch(`/api/upload?filename=${encodeURIComponent(f.name)}`, { method: 'POST', body: f });
+  const j = await r.json(); if (!r.ok) return toast(j.error);
+  await api('/api/settings', 'POST', { layout: { bg: j.url } });
+};
+$('#bgClear').onclick = () => api('/api/settings', 'POST', { layout: { bg: '' } });
+addEventListener('resize', () => $('#setDlg').open && preview());
+</script>
+</body>
+</html>

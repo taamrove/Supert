@@ -1,0 +1,8 @@
+{
+  "name": "supert",
+  "version": "1.0.0",
+  "description": "Lower-third controller for vMix and OBS",
+  "private": true,
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=22" }
+}
